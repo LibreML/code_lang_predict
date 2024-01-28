@@ -63,11 +63,11 @@ def randomize_json_data(json_path):
         json.dump(data, file, indent=4)
 
 def main():
-    allowed_extensions = load_json_file('datasets/allowed_extensions.json')
-    language_mapping = {ext: lang for lang, exts in load_json_file('datasets/top_38_supported_languages.json').items() for ext in exts}
-    git_clone_urls = load_json_file('datasets/git_clone_urls_by_language_100.json')
+    allowed_extensions = load_json_file('data/datasets/allowed_extensions.json')
+    language_mapping = {ext: lang for lang, exts in load_json_file('data/datasets/top_38_supported_languages.json').items() for ext in exts}
+    git_clone_urls = load_json_file('data/datasets/git_clone_urls_by_language_100.json')
 
-    final_json_path = 'datasets/github_t100_repos_for_t38_langs.json'
+    final_json_path = 'data/datasets/github_t100_repos_for_t38_langs.json'
 
     for language, repos in git_clone_urls.items():
         for repo in repos:

@@ -13,5 +13,5 @@ def count_supported_languages(file_path):
         print(f"An error occurred: {e}")
 
 # Replace 'datasets/supported_languages.json' with your actual file path
-number_of_languages = count_supported_languages('datasets/supported_languages.json')
+number_of_languages = count_supported_languages('data/datasets/supported_languages.json')
 print(f"Number of supported programming languages: {number_of_languages}")

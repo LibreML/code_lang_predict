@@ -22,8 +22,8 @@ def fetch_repositories_for_language(github, language, max_repos=100):
 
 def main():
     current_directory = os.getcwd()
-    supported_languages_path = os.path.join(current_directory, 'datasets', 'top_38_supported_languages.json')
-    output_path = os.path.join(current_directory, 'datasets', 'git_clone_urls_by_language_100.json')
+    supported_languages_path = os.path.join(current_directory, 'data', 'datasets', 'top_38_supported_languages.json')
+    output_path = os.path.join(current_directory, 'data', 'datasets', 'git_clone_urls_by_language_100.json')
     supported_languages = load_json_file(supported_languages_path)
 
     # Fetch GitHub API token from environment variable

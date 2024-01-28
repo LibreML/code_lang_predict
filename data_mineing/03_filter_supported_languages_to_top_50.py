@@ -18,8 +18,8 @@ def find_language_in_supported(lang, supported_languages):
 
 # File paths
 current_directory = os.getcwd()
-supported_languages_path = os.path.join(current_directory, 'datasets', 'supported_languages.json')
-top_50_languages_path = os.path.join(current_directory, 'datasets', 'top_50_languages.json')
+supported_languages_path = os.path.join(current_directory,'data', 'datasets', 'supported_languages.json')
+top_50_languages_path = os.path.join(current_directory,'data', 'datasets', 'top_50_languages.json')
 
 # Load the datasets
 supported_languages = load_json_file(supported_languages_path)

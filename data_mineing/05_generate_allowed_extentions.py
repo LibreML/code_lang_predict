@@ -14,7 +14,7 @@ def save_json_file(data, file_path):
 
 # File paths
 current_directory = os.getcwd()
-supported_languages_path = os.path.join(current_directory, 'datasets', 'top_38_supported_languages.json')
+supported_languages_path = os.path.join(current_directory, 'data', 'datasets', 'top_38_supported_languages.json')
 
 def generate_allowed_extensions(supported_languages):
     allowed_extensions_set = set()
@@ -29,5 +29,5 @@ supported_languages = load_json_file(supported_languages_path)
 allowed_extensions_list = generate_allowed_extensions(supported_languages)
 
 # Save the allowed extensions to a JSON file
-output_path = os.path.join('datasets', 'allowed_extensions.json')
+output_path = os.path.join('data','datasets', 'allowed_extensions.json')
 save_json_file(allowed_extensions_list, output_path)

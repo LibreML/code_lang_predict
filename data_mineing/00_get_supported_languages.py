@@ -20,8 +20,8 @@ def fetch_supported_languages():
 
 
 def save_to_json(data, filename):
-    os.makedirs("datasets", exist_ok=True)
-    with open(os.path.join("datasets", filename), "w") as file:
+    os.makedirs("data/datasets", exist_ok=True)
+    with open(os.path.join("data","datasets", filename), "w") as file:
         json.dump(data, file, indent=4)
 
 def main():

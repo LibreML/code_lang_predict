@@ -26,5 +26,5 @@ top_50 = scrape_tiobe_index()
 print(top_50)
 
 # Optionally, save to a JSON file
-with open('datasets/top_50_languages.json', 'w') as f:
+with open('data/datasets/top_50_languages.json', 'w') as f:
     json.dump(top_50, f, indent=4)
