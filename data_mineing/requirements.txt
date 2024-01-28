@@ -1,0 +1,6 @@
+requests
+pyyaml
+lxml
+beautifulsoup4
+PyGithub
+GitPython
