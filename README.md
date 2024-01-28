@@ -13,4 +13,4 @@ The code in this project is licensed under the GNU Lesser General Public License
 
 ### Datasets and Models
 
-The datasets and models used and produced by this project are licensed under the Apache License, Version 2.0. See the [LICENSE](./datasets_plus_models/LICENSE) file for more details.
+The datasets and models used and produced by this project are licensed under the Apache License, Version 2.0. See the [LICENSE](./data/LICENSE) file for more details.
