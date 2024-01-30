@@ -69,20 +69,23 @@ def main():
 
     final_json_path = 'data/datasets/github_t100_repos_for_t38_langs.json'
 
-    for language, repos in git_clone_urls.items():
-        for repo in repos:
+    total_languages = len(git_clone_urls)
+    for i, (language, repos) in enumerate(git_clone_urls.items(), start=1):
+        logging.info(f"Processing language {i}/{total_languages}: {language}")
+        total_repos = len(repos)
+        for j, repo in enumerate(repos, start=1):
             unique_dir_name = md5(repo.encode('utf-8')).hexdigest()
             temp_repo_path = os.path.join("/tmp", unique_dir_name)
 
-            if not clone_repository(repo, temp_repo_path):
-                continue  # Skip this repo if cloning failed
-
-            repo_data = process_repository(temp_repo_path, allowed_extensions, language_mapping)
-            update_final_json(final_json_path, repo_data)
-
-            if os.path.exists(temp_repo_path):
-                shutil.rmtree(temp_repo_path)
-                logging.info(f"Removed repository directory {temp_repo_path}")
+            if clone_repository(repo, temp_repo_path):
+                logging.info(f"[{j}/{total_repos} repos] Cloned {repo}")
+                repo_data = process_repository(temp_repo_path, allowed_extensions, language_mapping)
+                update_final_json(final_json_path, repo_data)
+                if os.path.exists(temp_repo_path):
+                    shutil.rmtree(temp_repo_path)
+                    logging.info(f"Removed repository directory {temp_repo_path}")
+            else:
+                logging.info(f"[{j}/{total_repos} repos] Skipped {repo}")
 
     randomize_json_data(final_json_path)
     logging.info("Repository processing completed.")
