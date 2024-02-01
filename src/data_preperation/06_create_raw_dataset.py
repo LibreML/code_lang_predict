@@ -1,10 +1,11 @@
-import git
+import requests
 import glob
 import json
 import os
 import shutil
 import logging
 import random
+import zipfile
 from hashlib import md5
 
 # Setup logging
@@ -14,19 +15,40 @@ def load_json_file(file_path):
     with open(file_path, 'r') as file:
         return json.load(file)
 
-# Modify clone_repository to return a success status
-def clone_repository(repo_url, dest):
-    try:
-        git.Repo.clone_from(repo_url, dest, depth=1)
-        logging.info(f"Cloned {repo_url} successfully.")
-        return True
-    except Exception as e:
-        logging.error(f"Error cloning {repo_url}: {str(e)}")
-        return False
+def download_and_extract_zip(repo_slug, dest):
+    failed_attempts = 0
+    for branch in ['main', 'master']:
+        zip_url = f"https://github.com/{repo_slug}/archive/refs/heads/{branch}.zip"
+        try:
+            response = requests.get(zip_url, stream=True)
+            if response.status_code == 200:
+                zip_path = f"{dest}.zip"
+                with open(zip_path, 'wb') as f:
+                    f.write(response.content)
+                with zipfile.ZipFile(zip_path, 'r') as zip_ref:
+                    zip_ref.extractall(dest)
+                os.remove(zip_path)  # Clean up ZIP file
+                logging.info(f"Extracted {zip_url} successfully.")
+                return True
+        except Exception as e:
+            logging.error(f"Error downloading ZIP from {zip_url}: {str(e)}")
+            return False
+        failed_attempts += 1
+
+    if failed_attempts == len(['main', 'master']):
+        logging.error(f"Failed to download and extract {repo_slug} for both 'main' and 'master' branches.")
+    return False
+
+def save_repo_data(repo_data, repo_slug, dest_folder):
+    filename = f"{md5(repo_slug.encode('utf-8')).hexdigest()}.json"
+    filepath = os.path.join(dest_folder, filename)
+    with open(filepath, 'w') as file:
+        json.dump(repo_data, file, indent=4)
+    logging.info(f"Saved repository data to {filepath}")
 
 def process_repository(repo_path, allowed_extensions, language_mapping):
     repo_data = {}
-    for file_path in glob.glob(f'{repo_path}/**', recursive=True):
+    for file_path in glob.glob(f'{repo_path}/**/*', recursive=True):
         if os.path.isfile(file_path) and any(file_path.endswith(ext) for ext in allowed_extensions):
             ext = os.path.splitext(file_path)[1]
             language = language_mapping.get(ext)
@@ -39,55 +61,36 @@ def process_repository(repo_path, allowed_extensions, language_mapping):
                     logging.warning(f"Skipped non UTF-8 file: {file_path}")
     return repo_data
 
-def update_final_json(final_json_path, new_data):
-    if os.path.exists(final_json_path):
-        with open(final_json_path, 'r') as file:
-            existing_data = json.load(file)
-    else:
-        existing_data = {}
-
-    for lang, contents in new_data.items():
-        existing_data.setdefault(lang, []).extend(contents)
-
-    with open(final_json_path, 'w') as file:
-        json.dump(existing_data, file, indent=4)
-
-def randomize_json_data(json_path):
-    with open(json_path, 'r') as file:
-        data = json.load(file)
-
-    for key in data:
-        random.shuffle(data[key])
-
-    with open(json_path, 'w') as file:
-        json.dump(data, file, indent=4)
-
 def main():
     allowed_extensions = load_json_file('data/datasets/allowed_extensions.json')
     language_mapping = {ext: lang for lang, exts in load_json_file('data/datasets/top_38_supported_languages.json').items() for ext in exts}
     git_clone_urls = load_json_file('data/datasets/git_clone_urls_by_language_100.json')
 
-    final_json_path = 'data/datasets/github_t100_repos_for_t38_langs.json'
+    output_folder_path = 'data/datasets/top_supported_languages'
+    os.makedirs(output_folder_path, exist_ok=True)
 
     total_languages = len(git_clone_urls)
+    languages_processed = 0
     for i, (language, repos) in enumerate(git_clone_urls.items(), start=1):
-        logging.info(f"Processing language {i}/{total_languages}: {language}")
+        language_folder = os.path.join(output_folder_path, language)
+        os.makedirs(language_folder, exist_ok=True)
+
         total_repos = len(repos)
+        repos_processed = 0
         for j, repo in enumerate(repos, start=1):
-            unique_dir_name = md5(repo.encode('utf-8')).hexdigest()
+            repo_slug = '/'.join(repo.split('/')[-2:]).replace('.git', '')  # Ensure full repo slug is used
+            unique_dir_name = md5(repo_slug.encode('utf-8')).hexdigest()
             temp_repo_path = os.path.join("/tmp", unique_dir_name)
 
-            if clone_repository(repo, temp_repo_path):
-                logging.info(f"[{j}/{total_repos} repos] Cloned {repo}")
+            if download_and_extract_zip(repo_slug, temp_repo_path):
                 repo_data = process_repository(temp_repo_path, allowed_extensions, language_mapping)
-                update_final_json(final_json_path, repo_data)
-                if os.path.exists(temp_repo_path):
-                    shutil.rmtree(temp_repo_path)
-                    logging.info(f"Removed repository directory {temp_repo_path}")
-            else:
-                logging.info(f"[{j}/{total_repos} repos] Skipped {repo}")
+                save_repo_data(repo_data, repo_slug, language_folder)
+                shutil.rmtree(temp_repo_path)
+                repos_processed += 1
+            # Progress log for each repo
+            logging.info(f"Progress: [{repos_processed}/{total_repos} Repos] [{languages_processed + 1}/{total_languages} Languages]")
+        languages_processed += 1
 
-    randomize_json_data(final_json_path)
     logging.info("Repository processing completed.")
 
 if __name__ == "__main__":
